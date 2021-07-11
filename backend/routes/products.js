@@ -57,19 +57,44 @@ const products = [
 
 // Get list of products products
 router.get('/', (req, res, next) => {
-  // Return a list of dummy products
-  // Later, this data will be fetched from MongoDB
-  const queryPage = req.query.page;
-  const pageSize = 5;
-  let resultProducts = [...products];
-  if (queryPage) {
-    resultProducts = products.slice(
-      (queryPage - 1) * pageSize,
-      queryPage * pageSize
-    );
-  }
-  res.json(resultProducts);
+  // const queryPage = req.query.page;
+  // const pageSize = 5;
+  // let resultProducts = [...products];
+  // if (queryPage) {
+  //   resultProducts = products.slice(
+  //     (queryPage - 1) * pageSize,
+  //     queryPage * pageSize
+  //   );
+  // }
+  MongoClient.connect(
+    'mongodb+srv://maximilian:hqG9VedJmagiKhKo@cluster0-ntrwp.mongodb.net/shop?retryWrites=true'
+  )
+    .then(client => {
+      const products = [];
+      client
+        .db()
+        .collection('products')
+        .find()
+        .forEach(productDoc => {
+          productDoc.price = productDoc.price.toString();
+          products.push(productDoc);
+        })
+        .then(result => {
+          client.close();
+          res.status(200).json(products);
+        })
+        .catch(err => {
+          console.log(err);
+          client.close();
+          res.status(500).json({ message: 'An error occurred.' });
+        });
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ message: 'An error occurred.' });
+    });
 });
+
 
 // Get single product
 router.get('/:id', (req, res, next) => {
