@@ -4,6 +4,7 @@ const mongodb = require('mongodb');
 const db = require('../db');
 
 const Decimal128 = mongodb.Decimal128;
+const ObjectId = mongodb.ObjectId;
 
 const router = Router();
 
@@ -87,8 +88,18 @@ router.get('/', (req, res, next) => {
 
 // Get single product
 router.get('/:id', (req, res, next) => {
-  const product = products.find(p => p._id === req.params.id);
-  res.json(product);
+  db.getDb()
+    .db()
+    .collection('products')
+    .findOne({ _id: new ObjectId(req.params.id) })
+    .then(productDoc => {
+      productDoc.price = productDoc.price.toString();
+      res.status(200).json(productDoc);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ message: 'An error occurred.' });
+    });
 });
 
 // Add new product
