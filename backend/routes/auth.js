@@ -2,6 +2,8 @@ const Router = require('express').Router;
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
+const db = require('../db');
+
 const router = Router();
 
 const createToken = () => {
@@ -28,11 +30,22 @@ router.post('/signup', (req, res, next) => {
     .hash(pw, 12)
     .then(hashedPW => {
       // Store hashedPW in database
-      console.log(hashedPW);
-      const token = createToken();
-      res
-        .status(201)
-        .json({ token: token, user: { email: 'dummy@dummy.com' } });
+      db.getDb()
+        .db()
+        .collection('users')
+        .insertOne({
+          email: email,
+          password: hashedPW
+        })
+        .then(result => {
+          console.log(result);
+          const token = createToken();
+          res.status(201).json({ token: token, user: { email: email } });
+        })
+        .catch(err => {
+          console.log(err);
+          res.status(500).json({ message: 'Creating the user failed.' });
+        });
     })
     .catch(err => {
       console.log(err);
@@ -42,3 +55,4 @@ router.post('/signup', (req, res, next) => {
 });
 
 module.exports = router;
+
