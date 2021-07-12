@@ -6,6 +6,25 @@ import Products from '../../components/Products/Products';
 class ProductsPage extends Component {
   state = { isLoading: true, products: [] };
   componentDidMount() {
+    this.fetchData();
+  }
+
+  productDeleteHandler = productId => {
+    axios
+      .delete('http://localhost:3100/products/' + productId)
+      .then(result => {
+        console.log(result);
+        this.fetchData();
+      })
+      .catch(err => {
+        this.props.onError(
+          'Deleting the product failed. Please try again later'
+        );
+        console.log(err);
+      });
+  };
+
+  fetchData = () => {
     axios
       .get('http://localhost:3100/products')
       .then(productsResponse => {
@@ -14,20 +33,6 @@ class ProductsPage extends Component {
       .catch(err => {
         this.setState({ isLoading: false, products: [] });
         this.props.onError('Loading products failed. Please try again later');
-        console.log(err);
-      });
-  }
-
-  productDeleteHandler = productId => {
-    axios
-      .delete('http://localhost:3100/products/' + productId)
-      .then(result => {
-        console.log(result);
-      })
-      .catch(err => {
-        this.props.onError(
-          'Deleting the product failed. Please try again later'
-        );
         console.log(err);
       });
   };
